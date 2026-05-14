@@ -1,7 +1,8 @@
-from django.urls import path
-from .views import (get_profile, update_profile)
+from .views import ProfileViewSet
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-   path('/', get_profile),
-	 path('update/', update_profile),
-]
+router = DefaultRouter()
+
+router.register('profiles', ProfileViewSet, basename='profiles')
+
+urlpatterns = router.urls

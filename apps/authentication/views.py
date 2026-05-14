@@ -7,75 +7,141 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsSuperUser
 from django.contrib.auth.models import User
 
+from rest_framework.decorators import action
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
+from rest_framework.viewsets import ViewSet
 
-def register(request):
-	serializer = RegisterSerializer(data=request.data)
 
-	if serializer.is_valid():
-		user = serializer.save()
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
 
-		refresh = RefreshToken.for_user(user)
+# def register(request):
+# 	serializer = RegisterSerializer(data=request.data)
 
-		return Response({
-			'refresh': str(refresh),
-			'access': str(refresh.access_token),
-			'user': UserSerializer(user).data
-		}, status=status.HTTP_201_CREATED)
+# 	if serializer.is_valid():
+# 		user = serializer.save()
+
+# 		refresh = RefreshToken.for_user(user)
+
+# 		return Response({
+# 			'refresh': str(refresh),
+# 			'access': str(refresh.access_token),
+# 			'user': UserSerializer(user).data
+# 		}, status=status.HTTP_201_CREATED)
 	
-	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
 
-def login(request):
-	serializer = LoginSerializer(data=request.data)
+# def login(request):
+# 	serializer = LoginSerializer(data=request.data)
 
-	if serializer.is_valid():
-		user = serializer.validated_data['user']
+# 	if serializer.is_valid():
+# 		user = serializer.validated_data['user']
 
-		refresh = RefreshToken.for_user(user)
+# 		refresh = RefreshToken.for_user(user)
 
-		return Response({
-			'refresh': str(refresh),
-			'access': str(refresh.access_token),
-			'user': UserSerializer(user).data
-		}, status=status.HTTP_200_OK)
+# 		return Response({
+# 			'refresh': str(refresh),
+# 			'access': str(refresh.access_token),
+# 			'user': UserSerializer(user).data
+# 		}, status=status.HTTP_200_OK)
 	
-	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
 
-def logout(request):
-	try:
-		refresh = request.data.get('refresh')
-		RefreshToken(refresh).blacklist()
+# def logout(request):
+# 	try:
+# 		refresh = request.data.get('refresh')
+# 		RefreshToken(refresh).blacklist()
 
-		return Response({
-		'message': "Вы успешно вышли из системы."
-		}, status=status.HTTP_200_OK)
+# 		return Response({
+# 		'message': "Вы успешно вышли из системы."
+# 		}, status=status.HTTP_200_OK)
 	
-	except Exception:
-		return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку.'}, status=status.HTTP_400_BAD_REQUEST)
+# 	except Exception:
+# 		return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку.'}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_current_user(request):
-	serializer = UserSerializer(request.user)
-	return Response(serializer.data, status=status.HTTP_200_OK)
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_current_user(request):
+# 	serializer = UserSerializer(request.user)
+# 	return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-@permission_classes([IsSuperUser])
+# @api_view(['GET'])
+# @permission_classes([IsSuperUser])
 
-def get_users(request):
-	users = User.objects.all()
+# def get_users(request):
+# 	users = User.objects.all()
 
-	serializer = UserSerializer(users, many=True)
-	return Response(serializer.data, status=status.HTTP_200_OK)
+# 	serializer = UserSerializer(users, many=True)
+# 	return Response(serializer.data, status=status.HTTP_200_OK)
 
+class AuthViewSet(ViewSet):
+	@action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+	def register(self, request):
+
+		serializer = RegisterSerializer(data=request.data)
+
+		if serializer.is_valid():
+			user = serializer.save()
+
+			refresh = RefreshToken.for_user(user)
+
+			return Response({
+				'refresh': str(refresh),
+				'access': str(refresh.access_token),
+				'user': UserSerializer(user).data
+			}, status=status.HTTP_201_CREATED)
+		
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	@action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+	def login(self, request):
+
+		serializer = LoginSerializer(data=request.data)
+
+		if serializer.is_valid():
+			user = serializer.validated_data['user']
+
+			refresh = RefreshToken.for_user(user)
+
+			return Response({
+				'refresh': str(refresh),
+				'access': str(refresh.access_token),
+				'user': UserSerializer(user).data
+			}, status=status.HTTP_200_OK)
+		
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+	
+	@action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+	def logout(self, request):
+
+		try:
+			refresh = request.data.get('refresh')
+			RefreshToken(refresh).blacklist()
+
+			return Response({
+			'message': "Вы успешно вышли из системы."
+			}, status=status.HTTP_200_OK)
+		
+		except Exception:
+			return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку.'}, status=status.HTTP_400_BAD_REQUEST)
+
+	@action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated], url_path='me')
+	def get_current_user(self, request):
+		serializer = UserSerializer(request.user)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+	
+	@action(detail=False, methods=['GET'], permission_classes=[IsSuperUser], url_path='users')
+	def get_users(self, request):
+		users = User.objects.all()
+
+		serializer = UserSerializer(users, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
