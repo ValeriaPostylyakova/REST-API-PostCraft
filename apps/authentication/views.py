@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (RegisterSerializer, LoginSerializer, UserSerializer)
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import IsSuperUser
+from django.contrib.auth.models import User
 
 
 @api_view(['POST'])
@@ -66,3 +68,14 @@ def logout(request):
 def get_current_user(request):
 	serializer = UserSerializer(request.user)
 	return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsSuperUser])
+
+def get_users(request):
+	users = User.objects.all()
+
+	serializer = UserSerializer(users, many=True)
+	return Response(serializer.data, status=status.HTTP_200_OK)
+
