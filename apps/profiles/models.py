@@ -5,7 +5,7 @@ class Profile(models.Model):
 	first_name = models.CharField(max_length=150, blank=True)
 	last_name = models.CharField(max_length=150, blank=True)
 	bio = models.TextField(max_length=700, blank=True)
-	avatar = models.URLField(blank=True)
+	avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
 
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 

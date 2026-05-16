@@ -6,7 +6,7 @@ from ..categories.models import Category
 class Post(models.Model):
 	title = models.CharField(max_length=255)
 	content = models.TextField()
-	image_url = models.URLField(blank=True)
+	image_url = models.ImageField(upload_to='posts/', blank=True, null=True)
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

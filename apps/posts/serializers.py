@@ -10,17 +10,27 @@ class PostReadSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     category = serializers.StringRelatedField(read_only=True)
     tags = serializers.StringRelatedField(many=True, read_only=True)
-    comments = CommentReadSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'content', 'image_url', 'user', 'category', 'tags', 'comments', 'created_at', 'updated_at'
+            'id', 'title', 'content', 'image_url', 'user', 'category', 'tags','created_at', 'updated_at'
         ]
 
         read_only_fields = [
             'id', 'user', 'created_at', 'updated_at'
         ]
+
+    def validate_image_url(self, value):
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError('Размер изображения не должен превышать 5МБ')
+        
+        if value.name.endswith(('.jpg', '.png', '.jpeg')):
+            raise serializers.ValidationError('Недопустимое расширение изображения. Загрузите другое изображение и попробуйте еще раз.')
+
+        return value
+    
+
 
 class PostWriteSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(

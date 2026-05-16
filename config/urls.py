@@ -3,6 +3,9 @@ from django.urls import path, include
 from django.conf import settings
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView, SpectacularRedocView
 
+from django.conf.urls.static import static
+from django.conf import settings
+
 urlpatterns = [
     path(f'{settings.ADMIN_PANEL_PATH}/', admin.site.urls),
 
@@ -17,3 +20,6 @@ urlpatterns = [
 	path('api/v1/', include('apps.tags.urls')),
     path('api/v1/', include('apps.categories.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
