@@ -25,6 +25,7 @@ INSTALLED_APPS = [
 		
     'rest_framework',
 	'rest_framework_simplejwt.token_blacklist',
+	'drf_spectacular',
 	
     'apps.authentication',
 	'apps.profiles',
@@ -96,6 +97,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+		
+	'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -118,3 +121,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+ADMIN_PANEL_PATH = os.getenv('ADMIN_PANEL_PATH')
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PostCraft API',
+    'DESCRIPTION': 'Документация для API проекта PostCraft',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True, 
+}

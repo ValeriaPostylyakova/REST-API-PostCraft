@@ -2,57 +2,50 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-
 class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8, max_length=30)
+    confirm_password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
 
-	password = serializers.CharField(write_only=True, min_length=8, max_length=30)
-	confirm_password = serializers.CharField(write_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'confirm_password']
+    
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Пароли не совпадают."})
+        return data
 
-	class Meta:
-		model = User
-		fields = ['id', 'username', 'email', 'password', 'confirm_password']
-
-	def validate_email(self, value):
-		if User.objects.filter(email = value).exists():
-			raise serializers.ValidationError("Пользователь с таким email уже существует. Войдите в аккаунт или используйте другую почту.")
-		return value
-	
-	def validate(self, data):
-		if data['password'] != data['confirm_password']:
-			raise serializers.ValidationError("Пароли не совпадают. Пожалуйста, попробуйте ещё раз.")
-		return data
-
-	def create(self, validated_data):
-		return User.objects.create_user(
-			username=validated_data['username'],
-			email=validated_data['email'],
-			password=validated_data['password']
-		)
+    def create(self, validated_data):
+        validated_data.pop('confirm_password', None)
+        return User.objects.create_user(**validated_data)
 	
 class LoginSerializer(serializers.Serializer):
-	email = serializers.EmailField()
-	password = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
-	def validate(self, data):
-		email = data.get('email')
-		password = data.get('password')
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
 
-		user = User.objects.filter(email=email).first()
+        user_obj = User.objects.filter(email=email).first()
 
-		if user is None:
-			raise serializers.ValidationError("Пользователь с таким email не существует. Пожалуйста, зарегистрируйтесь.")
+        if user_obj is None:
+            raise serializers.ValidationError("Пользователь с таким email не существует.")
 
-		if not user.check_password(password):
-			raise serializers.ValidationError("Неправильный пароль. Пожалуйста, попробуйте ещё раз.")
+        user = authenticate(username=user_obj.username, password=password)
 
-		user = authenticate(username=user.username, password=password)
+        if not user:
+            raise serializers.ValidationError("Неправильный пароль. Пожалуйста, попробуйте ещё раз.")
 
-		data['user'] = user
+        if not user.is_active:
+            raise serializers.ValidationError("Данный аккаунт деактивирован.")
 
-		return data
+        data['user'] = user
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = User
-		fields = ['id', 'username', 'email']
-		read_only_fields = ['id']
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
+        read_only_fields = ['id']
