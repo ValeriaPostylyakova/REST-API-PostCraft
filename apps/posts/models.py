@@ -13,7 +13,7 @@ class Post(models.Model):
 
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
 	tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
-	category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
+	category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, related_name='posts')
 
 	def __str__(self):
 		return self.title

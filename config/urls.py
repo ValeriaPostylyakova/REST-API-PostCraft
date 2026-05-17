@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/v1/', include('apps.comments.urls')),
 	path('api/v1/', include('apps.tags.urls')),
     path('api/v1/', include('apps.categories.urls')),
+    path('api/v1/', include('apps.users.urls')),
 ]
 
 if settings.DEBUG:

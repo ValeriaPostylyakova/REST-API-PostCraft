@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Comment
 from ..posts.models import Post
-from ..authentication.serializers import UserSerializer
+from ..users.serializers import UserSerializer
 
 
 class CommentReadSerializer(serializers.ModelSerializer):

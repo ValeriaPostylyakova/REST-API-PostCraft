@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 	'apps.comments',
 	'apps.tags',
 	'apps.categories',
+    'apps.users',
 ]
 
 MIDDLEWARE = [
@@ -130,4 +131,5 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True, 
+    "SCHEMA_PATH_PREFIX": "/api/v1",
 }

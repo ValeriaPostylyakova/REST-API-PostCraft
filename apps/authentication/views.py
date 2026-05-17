@@ -1,159 +1,161 @@
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import (RegisterSerializer, LoginSerializer, UserSerializer)
-from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import IsSuperUser
-from django.contrib.auth.models import User
-
 from rest_framework.decorators import action
-
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import ViewSet
 
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiResponse,
+    OpenApiExample
+)
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
-# def register(request):
-# 	serializer = RegisterSerializer(data=request.data)
-
-# 	if serializer.is_valid():
-# 		user = serializer.save()
-
-# 		refresh = RefreshToken.for_user(user)
-
-# 		return Response({
-# 			'refresh': str(refresh),
-# 			'access': str(refresh.access_token),
-# 			'user': UserSerializer(user).data
-# 		}, status=status.HTTP_201_CREATED)
-	
-# 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from .serializers import RegisterSerializer, LoginSerializer
+from ..users.serializers import UserSerializer
 
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-
-# def login(request):
-# 	serializer = LoginSerializer(data=request.data)
-
-# 	if serializer.is_valid():
-# 		user = serializer.validated_data['user']
-
-# 		refresh = RefreshToken.for_user(user)
-
-# 		return Response({
-# 			'refresh': str(refresh),
-# 			'access': str(refresh.access_token),
-# 			'user': UserSerializer(user).data
-# 		}, status=status.HTTP_200_OK)
-	
-# 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-
-# def logout(request):
-# 	try:
-# 		refresh = request.data.get('refresh')
-# 		RefreshToken(refresh).blacklist()
-
-# 		return Response({
-# 		'message': "Вы успешно вышли из системы."
-# 		}, status=status.HTTP_200_OK)
-	
-# 	except Exception:
-# 		return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку.'}, status=status.HTTP_400_BAD_REQUEST)
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def get_current_user(request):
-# 	serializer = UserSerializer(request.user)
-# 	return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# @api_view(['GET'])
-# @permission_classes([IsSuperUser])
+@extend_schema_view(
+    register=extend_schema(
+        tags=["Authorization"],
+        summary="Регистрация пользователя",
+        description="Создаёт нового пользователя и возвращает JWT токены.",
+        request=RegisterSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=UserSerializer,
+                description="Пользователь успешно создан"
+            )
+        },
+        examples=[
+            OpenApiExample(
+                "Пример регистрации",
+                value={
+                    "username": "testuser",
+                    "password": "strongpassword123"
+                },
+                request_only=True
+            )
+        ],
+    ),
 
-# def get_users(request):
-# 	users = User.objects.all()
+    login=extend_schema(
+        tags=["Authorization"],
+        summary="Вход пользователя",
+        request=LoginSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=UserSerializer,
+                description="Успешный вход"
+            )
+        }
+    ),
 
-# 	serializer = UserSerializer(users, many=True)
-# 	return Response(serializer.data, status=status.HTTP_200_OK)
+    logout=extend_schema(
+        tags=["Authorization"],
+        summary="Выход пользователя (blacklist refresh token)",
+        request={
+            "type": "object",
+            "properties": {
+                "refresh": {"type": "string"}
+            }
+        },
+        responses={200: OpenApiResponse(description="Успешный выход")}
+    ),
 
+    me=extend_schema(
+        tags=["User"],
+        summary="Получить или удалить текущего пользователя",
+        responses={200: UserSerializer}
+    ),
+
+    users=extend_schema(
+        tags=["User"],
+        summary="Список всех пользователей (только superuser)",
+        responses={200: UserSerializer(many=True)}
+    ),
+)
 class AuthViewSet(ViewSet):
-	@action(detail=False, methods=['POST'], permission_classes=[AllowAny])
-	def register(self, request):
+    @action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+    def register(self, request):
+        serializer = RegisterSerializer(data=request.data)
 
-		serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
 
-		if serializer.is_valid():
-			user = serializer.save()
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_201_CREATED)
 
-			refresh = RefreshToken.for_user(user)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-			return Response({
-				'refresh': str(refresh),
-				'access': str(refresh.access_token),
-				'user': UserSerializer(user).data
-			}, status=status.HTTP_201_CREATED)
-		
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['POST'], permission_classes=[AllowAny])
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
 
-	@action(detail=False, methods=['POST'], permission_classes=[AllowAny])
-	def login(self, request):
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            refresh = RefreshToken.for_user(user)
 
-		serializer = LoginSerializer(data=request.data)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
 
-		if serializer.is_valid():
-			user = serializer.validated_data['user']
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-			refresh = RefreshToken.for_user(user)
+    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        try:
+            refresh = request.data.get('refresh')
+            RefreshToken(refresh).blacklist()
 
-			return Response({
-				'refresh': str(refresh),
-				'access': str(refresh.access_token),
-				'user': UserSerializer(user).data
-			}, status=status.HTTP_200_OK)
-		
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-	
-	@action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
-	def logout(self, request):
+            return Response({"message": "Вы успешно вышли из системы."})
 
-		try:
-			refresh = request.data.get('refresh')
-			RefreshToken(refresh).blacklist()
+        except Exception:
+            return Response(
+                {"error": "Невалидный токен."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-			return Response({
-			'message': "Вы успешно вышли из системы."
-			}, status=status.HTTP_200_OK)
-		
-		except Exception:
-			return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку.'}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['GET', 'DELETE'], permission_classes=[IsAuthenticated])
+    def me(self, request):
 
-	@action(detail=False, methods=['GET', 'DELETE'], permission_classes=[IsAuthenticated])
-	def me(self, request):
+        if request.method == 'GET':
+            return Response(UserSerializer(request.user).data)
 
-		if request.method == 'GET':
-			serializer = UserSerializer(request.user)
-			return Response(serializer.data, status=status.HTTP_200_OK)
-		
-		if request.method == 'DELETE':
-			try:
-				refresh = request.data.get('refresh')
-				RefreshToken(refresh).blacklist()
-			except Exception:
-				return Response({'error': 'Невалидный токен. Пожалуйста, повторите попытку позднее.'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'DELETE':
+            try:
+                refresh = request.data.get('refresh')
+                RefreshToken(refresh).blacklist()
+            except Exception:
+                return Response(
+                    {"error": "Невалидный токен."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-			request.user.delete()
-			return Response({'message': 'Пользователь удален.'}, status=status.HTTP_200_OK)
+            request.user.delete()
+            return Response({"message": "User удалён."})
+      
+@extend_schema(
+    tags=["Authorization"],
+    summary="Обновление access токена",
+    description="Принимает refresh token и возвращает новый access token",
+)
+class CustomTokenRefreshView(TokenRefreshView):
+    pass
 
-	@action(detail=False, methods=['GET'], permission_classes=[IsSuperUser])
-	def users(self, request):
-		users = User.objects.all()
 
-		serializer = UserSerializer(users, many=True)
-		return Response(serializer.data, status=status.HTTP_200_OK)
+
+        

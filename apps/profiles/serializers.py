@@ -1,8 +1,5 @@
 from rest_framework import serializers
 from .models import Profile
-from django.contrib.auth.models import User
-from ..authentication.serializers import UserSerializer
-
 class ProfileSerializer(serializers.ModelSerializer):
 
 	class Meta:
