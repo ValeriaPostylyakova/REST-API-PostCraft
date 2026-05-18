@@ -26,14 +26,12 @@ from ..comments.pagination import CommentPagination
         description="Возвращает список всех постов с фильтрацией, поиском и сортировкой.",
         responses={200: PostReadSerializer(many=True)}
     ),
-
     retrieve=extend_schema(
         tags=["Posts"],
         summary="Получить пост",
         description="Возвращает один пост по ID вместе с комментариями и связями.",
         responses={200: PostReadSerializer}
     ),
-
     create=extend_schema(
         tags=["Posts"],
         summary="Создать пост",
@@ -41,7 +39,6 @@ from ..comments.pagination import CommentPagination
         request=PostWriteSerializer,
         responses={201: PostReadSerializer}
     ),
-
     update=extend_schema(
         tags=["Posts"],
         summary="Обновить пост",
@@ -49,20 +46,26 @@ from ..comments.pagination import CommentPagination
         request=PostWriteSerializer,
         responses={200: PostReadSerializer}
     ),
-
     partial_update=extend_schema(
         tags=["Posts"],
         summary="Частичное обновление поста",
         request=PostWriteSerializer,
         responses={200: PostReadSerializer}
     ),
-
     destroy=extend_schema(
         tags=["Posts"],
         summary="Удалить пост",
         description="Удаление поста (только автор).",
         responses={204: OpenApiResponse(description="Пост удалён")}
     ),
+    # Перенесли документацию экшена сюда и изменили тег на "Posts"
+    comments=extend_schema(
+        tags=["Posts"],
+        operation_id="post_comments_list",
+        summary="Комментарии к посту",
+        description="Отдельный endpoint: получает комментарии конкретного поста. Не является частью CRUD комментариев.",
+        responses={200: CommentReadSerializer(many=True)}
+    )
 )
 class PostViewSet(ModelViewSet):
     queryset = Post.objects.select_related(
@@ -95,44 +98,20 @@ class PostViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         post = serializer.save(user=request.user)
-
-        response_serializer = PostReadSerializer(
-            post,
-            context={'request': request}
-        )
-
+        response_serializer = PostReadSerializer(post, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-
-        serializer = self.get_serializer(
-            instance,
-            data=request.data,
-            partial=partial
-        )
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-
         post = serializer.save()
-
-        response_serializer = PostReadSerializer(
-            post,
-            context={'request': request}
-        )
-
+        response_serializer = PostReadSerializer(post, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['GET'])
-    @extend_schema(
-        tags=["Comments"],
-        operation_id="post_comments_list",
-        summary="Комментарии к посту",
-        description="Отдельный endpoint: получает комментарии конкретного поста. Не является частью CRUD комментариев.",
-        responses={200: CommentReadSerializer(many=True)}
-    )
     def comments(self, request, pk=None):
         post = self.get_object()
         comments = post.comments.select_related('user').all()
@@ -141,16 +120,8 @@ class PostViewSet(ModelViewSet):
         page = paginator.paginate_queryset(comments, request)
 
         if page is not None:
-            serializer = CommentReadSerializer(
-                page,
-                many=True,
-                context={'request': request}
-            )
+            serializer = CommentReadSerializer(page, many=True, context={'request': request})
             return paginator.get_paginated_response(serializer.data)
 
-        serializer = CommentReadSerializer(
-            comments,
-            many=True,
-            context={'request': request}
-        )
+        serializer = CommentReadSerializer(comments, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)

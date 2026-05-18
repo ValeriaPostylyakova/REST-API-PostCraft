@@ -71,15 +71,9 @@ from ..users.serializers import UserSerializer
     ),
 
     me=extend_schema(
-        tags=["User"],
+        tags=["Authorization"],
         summary="Получить или удалить текущего пользователя",
         responses={200: UserSerializer}
-    ),
-
-    users=extend_schema(
-        tags=["User"],
-        summary="Список всех пользователей (только superuser)",
-        responses={200: UserSerializer(many=True)}
     ),
 )
 class AuthViewSet(ViewSet):

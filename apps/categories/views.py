@@ -17,12 +17,17 @@ from rest_framework import status
         description="Возвращает список всех категорий, отсортированных по имени.",
         responses={200: CategorySerializer(many=True)}
     ),
-
     retrieve=extend_schema(
         tags=["Categories"],
         summary="Получить категорию",
         description="Возвращает одну категорию по ID.",
         responses={200: CategorySerializer}
+    ),
+    posts=extend_schema(
+        tags=["Categories"],
+        summary="Получить посты по категории",
+        description="Возвращает список всех публикаций, которые относятся к данной категории.",
+        responses={200: PostReadSerializer(many=True)}
     )
 )
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):

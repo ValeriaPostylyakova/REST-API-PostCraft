@@ -18,12 +18,18 @@ from ..posts.serializers import PostReadSerializer
         description="Возвращает список всех тегов, отсортированных по имени.",
         responses={200: TagSerializer(many=True)}
     ),
-
     retrieve=extend_schema(
         tags=["Tags"],
         summary="Получить тег",
         description="Возвращает один тег по ID.",
         responses={200: TagSerializer}
+    ),
+    # Документируем кастомный метод posts здесь
+    posts=extend_schema(
+        tags=["Tags"],
+        summary="Получить посты по тегу",
+        description="Возвращает список всех публикаций, к которым привязан данный тег.",
+        responses={200: PostReadSerializer(many=True)}
     )
 )
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
