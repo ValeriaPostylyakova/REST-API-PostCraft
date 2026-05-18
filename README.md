@@ -386,7 +386,7 @@ Authorization: Bearer token
 - отключить DEBUG;
 - заменить SECRET_KEY;
 - настроить HTTPS;
-- ограничить ALLOWED_HOSTS;
+- заменить ADMIN_PANEL_PATH;
 - использовать PostgreSQL;
 - вынести секреты в environment variables.
 
