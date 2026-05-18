@@ -33,12 +33,8 @@
 - [Аутентификация](#аутентификация)
 - [Права доступа](#права-доступа)
 - [Примеры запросов](#примеры-запросов)
-- [Тестирование](#тестирование)
-- [Разработка](#разработка)
-- [Docker (опционально)](#docker-опционально)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+- [Безопасность](#безопасность)
+- [Production рекомендации](#production-рекомендации)
 
 ---
 
@@ -51,7 +47,6 @@
 - Django REST Framework
 - SQLite / PostgreSQL
 - JWT / Token Authentication
-- HTML / CSS / JavaScript (частично)
 - Pillow (если используется работа с изображениями)
 
 Дополнительно:
@@ -226,13 +221,14 @@ pip install -r requirements.txt
 ```env
 DEBUG=True
 SECRET_KEY=your_secret_key
-ALLOWED_HOSTS=127.0.0.1,localhost
 
 DB_NAME=postcraft
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_HOST=localhost
 DB_PORT=5432
+
+ADMIN_PANEL_PATH=your_url
 ```
 
 Если используется SQLite — дополнительная настройка не требуется.
@@ -381,108 +377,6 @@ Authorization: Bearer token
 	"content": "Hello from PostCraft"
 }
 ```
-
----
-
-# Тестирование
-
-Запуск тестов:
-
-```bash
-python manage.py test
-```
-
-При использовании pytest:
-
-```bash
-pytest
-```
-
----
-
-# Разработка
-
-## Code Style
-
-Рекомендуется использовать:
-
-- black
-- isort
-- flake8
-
-### Форматирование
-
-```bash
-black .
-isort .
-```
-
----
-
-# Docker (опционально)
-
-## Сборка контейнера
-
-```bash
-docker build -t postcraft .
-```
-
-## Запуск
-
-```bash
-docker run -p 8000:8000 postcraft
-```
-
----
-
-# Roadmap
-
-Планируемые улучшения:
-
-- [ ] Likes/Reactions
-- [ ] Followers system
-- [ ] Notifications
-- [ ] WebSocket chat
-- [ ] Full-text search
-- [ ] Swagger/OpenAPI
-- [ ] CI/CD
-- [ ] Docker Compose
-- [ ] Redis caching
-- [ ] Celery background tasks
-- [ ] PostgreSQL optimization
-
----
-
-# Contributing
-
-Pull requests приветствуются.
-
-## Workflow
-
-1. Fork репозиторий
-2. Создать feature branch
-3. Сделать commit
-4. Push изменений
-5. Создать Pull Request
-
----
-
-# Рекомендации для разработчиков
-
-## Архитектурные принципы
-
-- Разделяйте бизнес-логику по приложениям.
-- Используйте serializers вместо ручной обработки JSON.
-- Все permissions храните отдельно.
-- Не смешивайте логику представления и модели.
-- Используйте pagination для больших выборок.
-
-## Naming conventions
-
-- `Serializer` — сериализаторы
-- `ViewSet` / `APIView` — API
-- `permissions.py` — кастомные права
-- `services.py` — бизнес-логика (если появится)
 
 ---
 
