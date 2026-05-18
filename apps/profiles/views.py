@@ -6,8 +6,7 @@ from rest_framework.viewsets import ViewSet
 
 from drf_spectacular.utils import (
     extend_schema,
-    extend_schema_view,
-    OpenApiResponse
+    extend_schema_view
 )
 
 from .serializers import ProfileSerializer

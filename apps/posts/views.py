@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.parsers import MultiPartParser, FormParser
 
 from drf_spectacular.utils import (
     extend_schema,
@@ -58,7 +57,6 @@ from ..comments.pagination import CommentPagination
         description="Удаление поста (только автор).",
         responses={204: OpenApiResponse(description="Пост удалён")}
     ),
-    # Перенесли документацию экшена сюда и изменили тег на "Posts"
     comments=extend_schema(
         tags=["Posts"],
         operation_id="post_comments_list",
@@ -84,7 +82,6 @@ class PostViewSet(ModelViewSet):
 
     pagination_class = PostPagination
     filter_backends = [SearchFilter, OrderingFilter]
-    parser_classes = [MultiPartParser, FormParser]
 
     search_fields = ['title', 'content', 'user__username', 'category__name', 'tags__name']
     ordering_fields = ['created_at', 'title']
@@ -94,6 +91,7 @@ class PostViewSet(ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return PostWriteSerializer
         return PostReadSerializer
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

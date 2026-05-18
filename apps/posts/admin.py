@@ -4,7 +4,7 @@ from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'category', 'get_tags', 'display_image', 'created_at')
+    list_display = ('id', 'title', 'user', 'category', 'get_tags', 'display_image', 'created_at')
     
     list_display_links = ('title',)
     

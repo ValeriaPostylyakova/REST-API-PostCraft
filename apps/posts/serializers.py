@@ -21,14 +21,6 @@ class PostReadSerializer(serializers.ModelSerializer):
             'id', 'user', 'created_at', 'updated_at'
         ]
 
-    def validate_image_url(self, value):
-        if value.size > 5 * 1024 * 1024:
-            raise serializers.ValidationError('Размер изображения не должен превышать 5МБ')
-        
-        if value.name.endswith(('.jpg', '.png', '.jpeg')):
-            raise serializers.ValidationError('Недопустимое расширение изображения. Загрузите другое изображение и попробуйте еще раз.')
-
-        return value
     
 
 
@@ -53,3 +45,14 @@ class PostWriteSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'user', 'created_at', 'updated_at'
         ]
+        
+    def validate_image_url(self, value):
+        if not value:
+            return value
+
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError('Размер изображения не должен превышать 5МБ')
+        
+        if not value.name.lower().endswith(('.jpg', '.png', '.jpeg')):
+            raise serializers.ValidationError('Недопустимое расширение изображения. Загрузите другое изображение и попробуйте еще раз.')
+        return value
